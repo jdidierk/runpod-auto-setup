@@ -10,13 +10,13 @@ cd /workspace/stable-diffusion-webui || exit
 # Définir le jeton Hugging Face (REMPLACEZ "YOUR_HF_TOKEN" PAR VOTRE JETON)
 HF_TOKEN="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"
 
-# Télécharger le modèle ReV Animated depuis Hugging Face (Pluto)
+# Télécharger le modèle ReV Animated depuis Hugging Face (bonne URL)
 echo "📥 Téléchargement du modèle ReV Animated..."
-MODEL_URL="https://huggingface.co/pluto-research/revAnimated/resolve/main/revAnimated.safetensors"
-MODEL_PATH="models/Stable-diffusion/revAnimated.safetensors"
+MODEL_URL="https://huggingface.co/danbrown/RevAnimated/resolve/main/rev-animated-v1-2-2.safetensors"
+MODEL_PATH="models/Stable-diffusion/rev-animated-v1-2-2.safetensors"
 
 if [ ! -f "$MODEL_PATH" ]; then
-    aria2c -x 16 -s 16 -o "$MODEL_PATH" --header "Authorization: Bearer $HF_TOKEN" "$MODEL_URL"
+    wget --header="Authorization: Bearer $HF_TOKEN" -O "$MODEL_PATH" "$MODEL_URL"
 fi
 
 if [ -f "$MODEL_PATH" ]; then
@@ -31,7 +31,7 @@ VAE_URL="https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/
 VAE_PATH="models/VAE/vae-ft-mse-840000-ema-pruned.safetensors"
 
 if [ ! -f "$VAE_PATH" ]; then
-    aria2c -x 16 -s 16 -o "$VAE_PATH" --header "Authorization: Bearer $HF_TOKEN" "$VAE_URL"
+    wget --header="Authorization: Bearer $HF_TOKEN" -O "$VAE_PATH" "$VAE_URL"
 fi
 
 if [ -f "$VAE_PATH" ]; then
