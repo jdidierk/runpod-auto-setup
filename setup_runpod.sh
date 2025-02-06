@@ -31,7 +31,10 @@ VAE_URL="https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/
 VAE_PATH="models/VAE/vae-ft-mse-840000-ema-pruned.safetensors"
 
 if [ ! -f "$VAE_PATH" ]; then
-    wget --header="Authorization: Bearer $HF_TOKEN" -O "$VAE_PATH" "$VAE_URL"
+   GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/danbrown/RevAnimated-v1-2-2 models/Stable-diffusion/rev-animated
+cd models/Stable-diffusion/rev-animated
+git lfs pull --include="rev-animated-v1-2-2.safetensors"
+
 fi
 
 if [ -f "$VAE_PATH" ]; then
