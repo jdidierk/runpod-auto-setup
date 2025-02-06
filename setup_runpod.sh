@@ -74,6 +74,13 @@ else
     echo "❌ Échec du téléchargement du VAE. Téléchargez-le manuellement."
 fi
 
+# Télécharger le modèle depuis CivitAI
+echo "📥 Téléchargement du modèle depuis CivitAI..."
+CIVITAI_MODEL_DIR="models/Stable-diffusion"
+mkdir -p "$CIVITAI_MODEL_DIR"
+cd "$CIVITAI_MODEL_DIR" || exit
+wget --content-disposition "https://civitai.com/api/download/models/119438?type=Model&format=SafeTensor&size=full&fp=fp16"
+
 # Configuration des arguments de lancement
 echo "⚙️ Configuration de lancement..."
 echo "export COMMANDLINE_ARGS='--xformers --no-half-vae --theme dark'" >> ~/.bashrc
