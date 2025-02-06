@@ -7,13 +7,16 @@
 # Aller dans le dossier Stable Diffusion WebUI
 cd /workspace/stable-diffusion-webui || exit
 
+# Définir le jeton Hugging Face (REMPLACEZ "YOUR_HF_TOKEN" PAR VOTRE JETON)
+HF_TOKEN="YOUR_HF_TOKEN"
+
 # Télécharger le modèle ReV Animated depuis Hugging Face (Pluto)
 echo "📥 Téléchargement du modèle ReV Animated..."
 MODEL_URL="https://huggingface.co/pluto-research/revAnimated/resolve/main/revAnimated.safetensors"
 MODEL_PATH="models/Stable-diffusion/revAnimated.safetensors"
 
 if [ ! -f "$MODEL_PATH" ]; then
-    aria2c -x 16 -s 16 -o "$MODEL_PATH" "$MODEL_URL"
+    aria2c -x 16 -s 16 -o "$MODEL_PATH" --header "Authorization: Bearer $HF_TOKEN" "$MODEL_URL"
 fi
 
 if [ -f "$MODEL_PATH" ]; then
@@ -28,7 +31,7 @@ VAE_URL="https://huggingface.co/stabilityai/sd-vae-ft-mse/resolve/main/vae-ft-ms
 VAE_PATH="models/VAE/vae-ft-mse-840000-ema-pruned.safetensors"
 
 if [ ! -f "$VAE_PATH" ]; then
-    aria2c -x 16 -s 16 -o "$VAE_PATH" "$VAE_URL"
+    aria2c -x 16 -s 16 -o "$VAE_PATH" --header "Authorization: Bearer $HF_TOKEN" "$VAE_URL"
 fi
 
 if [ -f "$VAE_PATH" ]; then
