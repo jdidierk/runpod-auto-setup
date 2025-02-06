@@ -23,16 +23,17 @@ else
     echo "✅ rclone est déjà installé."
 fi
 
-# Vérifier si rclone est déjà configuré avec Google Drive
-if ! rclone listremotes | grep -q "gdrive:"; then
-    echo "⚠️ Rclone n'est pas encore configuré pour Google Drive. Configuration automatique..."
-    echo "Suivez les instructions à l'écran pour lier votre compte Google Drive."
-    rclone config
+# Vérifier et configurer Rclone si nécessaire
+mkdir -p ~/.config/rclone
+if [ ! -f /workspace/rclone.conf ]; then
+    echo "⚠️ Fichier rclone.conf introuvable. Création d'une configuration par défaut..."
+    rclone config create gdrive drive scope drive
+    cp $(rclone config file | awk '{print $NF}') /workspace/rclone.conf
 fi
 
-# Créer le dossier sur Google Drive s'il n'existe pas
-echo "📂 Vérification du dossier sur Google Drive..."
-rclone mkdir "$GDRIVE_REMOTE"
+# Charger la configuration Rclone
+cp /workspace/rclone.conf ~/.config/rclone/rclone.conf
+    echo "✅ Configuration Rclone chargée."
 
 # Télécharger le modèle ReV Animated depuis Hugging Face avec aria2c
 echo "📥 Téléchargement du modèle ReV Animated..."
