@@ -10,6 +10,30 @@ cd /workspace/stable-diffusion-webui || exit
 # Définir le jeton Hugging Face (REMPLACEZ "YOUR_HF_TOKEN" PAR VOTRE JETON)
 HF_TOKEN="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"
 
+# Définir le remote Rclone pour Google Drive
+GDRIVE_REMOTE="gdrive:StableDiffusion-Images"
+LOCAL_OUTPUTS="outputs"
+
+# Vérifier et installer rclone si nécessaire
+echo "🔍 Vérification de l'installation de rclone..."
+if ! command -v rclone &> /dev/null; then
+    echo "📦 Installation de rclone..."
+    apt update && apt install -y rclone
+else
+    echo "✅ rclone est déjà installé."
+fi
+
+# Vérifier si rclone est déjà configuré avec Google Drive
+if ! rclone listremotes | grep -q "gdrive:"; then
+    echo "⚠️ Rclone n'est pas encore configuré pour Google Drive. Configuration automatique..."
+    echo "Suivez les instructions à l'écran pour lier votre compte Google Drive."
+    rclone config
+fi
+
+# Créer le dossier sur Google Drive s'il n'existe pas
+echo "📂 Vérification du dossier sur Google Drive..."
+rclone mkdir "$GDRIVE_REMOTE"
+
 # Télécharger le modèle ReV Animated depuis Hugging Face avec aria2c
 echo "📥 Téléchargement du modèle ReV Animated..."
 MODEL_URL="https://huggingface.co/danbrown/RevAnimated-v1-2-2/resolve/main/rev-animated-v1-2-2.safetensors"
@@ -58,11 +82,23 @@ source ~/.bashrc
 echo "🚀 Démarrage de l'interface WebUI..."
 nohup python launch.py > webui.log 2>&1 &
 
+# Automatiser la sauvegarde des images générées vers Google Drive toutes les 5 minutes
+echo "🗂️ Configuration de la synchronisation avec Google Drive..."
+while true; do
+    echo "🔄 Synchronisation des images vers Google Drive..."
+    rclone sync "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress
+    sleep 300  # Attente de 5 minutes
+done &
+
 # Définir un délai d'inactivité pour fermeture auto (ex: 1h = 3600s)
 INACTIVITY_TIMEOUT=3600
 
 echo "⏳ Suivi de l'activité..."
 sleep $INACTIVITY_TIMEOUT
+
+# Synchroniser une dernière fois avant d'éteindre le pod
+echo "🔄 Dernière synchronisation des images avant arrêt..."
+rclone sync "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress
 
 echo "🔻 Aucune activité détectée, arrêt du pod..."
 poweroff
