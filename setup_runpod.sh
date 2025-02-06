@@ -8,11 +8,11 @@
 cd /workspace/stable-diffusion-webui || exit
 
 # Définir le jeton Hugging Face (REMPLACEZ "YOUR_HF_TOKEN" PAR VOTRE JETON)
-HF_TOKEN="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"
+HF_TOKEN="YOUR_HF_TOKEN"
 
-# Télécharger le modèle ReV Animated depuis Hugging Face (bonne URL)
+# Télécharger le modèle ReV Animated depuis Hugging Face (URL confirmée)
 echo "📥 Téléchargement du modèle ReV Animated..."
-MODEL_URL="https://huggingface.co/danbrown/RevAnimated/resolve/main/rev-animated-v1-2-2.safetensors"
+MODEL_URL="https://huggingface.co/danbrown/RevAnimated-v1-2-2/resolve/main/rev-animated-v1-2-2.safetensors"
 MODEL_PATH="models/Stable-diffusion/rev-animated-v1-2-2.safetensors"
 
 if [ ! -f "$MODEL_PATH" ]; then
