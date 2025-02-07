@@ -46,6 +46,11 @@ if ! rclone lsd gdrive: &> /dev/null; then
     rclone config reconnect gdrive:
 fi
 
+# Créer le dossier de sortie s'il n'existe pas
+echo "📂 Vérification et création du dossier output..."
+mkdir -p "$LOCAL_OUTPUTS"
+chmod -R 777 "$LOCAL_OUTPUTS"
+
 # Télécharger le modèle ReV Animated depuis Hugging Face avec aria2c
 echo "📥 Téléchargement du modèle ReV Animated..."
 MODEL_URL="https://huggingface.co/danbrown/RevAnimated-v1-2-2/resolve/main/rev-animated-v1-2-2.safetensors"
