@@ -51,6 +51,25 @@ echo "📂 Vérification et création du dossier output..."
 mkdir -p "$LOCAL_OUTPUTS"
 chmod -R 777 "$LOCAL_OUTPUTS"
 
+# Appliquer les réglages par défaut dans ui-config.json
+echo "🔧 Configuration des paramètres par défaut..."
+cat > /workspace/stable-diffusion-webui/ui-config.json <<EOL
+{
+    "txt2img/Sampling Steps": 45,
+    "txt2img/Sampling method": "Euler a",
+    "txt2img/Width": 1024,
+    "txt2img/Height": 1536,
+    "txt2img/CFG Scale": 11,
+    "txt2img/Batch count": 4,
+    "txt2img/Batch size": 1,
+    "txt2img/Seed": -1,
+    "txt2img/Hires fix": true,
+    "txt2img/Hires upscale": 2,
+    "txt2img/Upscaler": "R-ESRGAN 4x+ Anime6B",
+    "txt2img/Denoising strength": 0.46
+}
+EOL
+
 # Télécharger le modèle ReV Animated depuis Hugging Face avec aria2c
 echo "📥 Téléchargement du modèle ReV Animated..."
 MODEL_URL="https://huggingface.co/danbrown/RevAnimated-v1-2-2/resolve/main/rev-animated-v1-2-2.safetensors"
@@ -108,7 +127,7 @@ nohup python launch.py > webui.log 2>&1 &
 echo "🗂️ Configuration de la synchronisation avec Google Drive..."
 while true; do
     echo "🔄 Synchronisation des images vers Google Drive..."
-    rclone sync "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress
+    rclone sync "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress --ignore-existing
     sleep 300  # Attente de 5 minutes
 done &
 
@@ -120,7 +139,7 @@ sleep $INACTIVITY_TIMEOUT
 
 # Synchroniser une dernière fois avant d'éteindre le pod
 echo "🔄 Dernière synchronisation des images avant arrêt..."
-rclone sync "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress
+rclone sync "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress --ignore-existing
 
 echo "🔻 Aucune activité détectée, arrêt du pod..."
 poweroff
