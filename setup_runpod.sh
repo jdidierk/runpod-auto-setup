@@ -10,8 +10,9 @@ cd /workspace/stable-diffusion-webui || exit
 # Définir le jeton Hugging Face (REMPLACEZ "YOUR_HF_TOKEN" PAR VOTRE JETON)
 HF_TOKEN="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"
 
-# Définir le remote Rclone pour Google Drive
+# Définir les remotes Rclone pour Google Drive
 GDRIVE_REMOTE="gdrive:StableDiffusion-Outputs"
+GDRIVE_BACKUP="gdrive:StableDiffusion-Backup"
 LOCAL_OUTPUTS="/workspace/stable-diffusion-webui/output"
 
 # Vérifier et installer rclone si nécessaire
@@ -70,46 +71,7 @@ cat > /workspace/stable-diffusion-webui/ui-config.json <<EOL
 }
 EOL
 
-# Télécharger le modèle ReV Animated depuis Hugging Face avec aria2c
-echo "📥 Téléchargement du modèle ReV Animated..."
-MODEL_URL="https://huggingface.co/danbrown/RevAnimated-v1-2-2/resolve/main/rev-animated-v1-2-2.safetensors"
-MODEL_PATH="models/Stable-diffusion/rev-animated-v1-2-2.safetensors"
-
-if [ ! -f "$MODEL_PATH" ]; then
-    aria2c -x 16 -s 16 --header="Authorization: Bearer $HF_TOKEN" -o "$MODEL_PATH" "$MODEL_URL"
-fi
-
-if [ -f "$MODEL_PATH" ]; then
-    echo "✅ Modèle téléchargé avec succès."
-else
-    echo "❌ Échec du téléchargement du modèle ReV Animated. Téléchargez-le manuellement."
-fi
-
-# Télécharger un VAE adapté avec git lfs
-echo "📥 Téléchargement du VAE..."
-VAE_DIR="models/VAE"
-VAE_REPO="https://huggingface.co/stabilityai/sd-vae-ft-mse-original"
-VAE_FILE="vae-ft-mse-840000-ema-pruned.safetensors"
-
-if [ ! -f "$VAE_DIR/$VAE_FILE" ]; then
-    mkdir -p "$VAE_DIR"
-    cd "$VAE_DIR" || exit
-    git lfs install
-    git clone "$VAE_REPO" vae-repo
-    cd vae-repo || exit
-    git lfs pull --include="$VAE_FILE"
-    mv "$VAE_FILE" ../
-    cd ../
-    rm -rf vae-repo
-fi
-
-if [ -f "$VAE_DIR/$VAE_FILE" ]; then
-    echo "✅ VAE téléchargé avec succès."
-else
-    echo "❌ Échec du téléchargement du VAE. Téléchargez-le manuellement."
-fi
-
-# Téléchargement du modèle AnythingV5NijiMix
+# Télécharger le modèle AnythingV5NijiMix
 echo "📥 Téléchargement du modèle AnythingV5NijiMix..."
 cd /workspace/stable-diffusion-webui/models/Stable-diffusion/
 wget --content-disposition "https://civitai.com/api/download/models/119438?type=Model&format=SafeTensor&size=full&fp=fp16"
@@ -127,7 +89,7 @@ nohup python launch.py > webui.log 2>&1 &
 echo "🗂️ Configuration de la synchronisation avec Google Drive..."
 while true; do
     echo "🔄 Synchronisation des images vers Google Drive..."
-    rclone sync "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress --ignore-existing
+    rclone sync "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress --backup-dir "$GDRIVE_BACKUP/$(date +%Y-%m-%d)/" --ignore-existing
     sleep 300  # Attente de 5 minutes
 done &
 
@@ -139,7 +101,7 @@ sleep $INACTIVITY_TIMEOUT
 
 # Synchroniser une dernière fois avant d'éteindre le pod
 echo "🔄 Dernière synchronisation des images avant arrêt..."
-rclone sync "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress --ignore-existing
+rclone sync "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress --backup-dir "$GDRIVE_BACKUP/$(date +%Y-%m-%d)/" --ignore-existing
 
 echo "🔻 Aucune activité détectée, arrêt du pod..."
 poweroff
