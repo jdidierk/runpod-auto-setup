@@ -9,6 +9,7 @@ cd /workspace/stable-diffusion-webui || exit
 
 # Définir le jeton Hugging Face (REMPLACEZ "YOUR_HF_TOKEN" PAR VOTRE JETON)
 HF_TOKEN="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"
+#!/bin/bash
 
 # Définir le remote Rclone pour Google Drive
 GDRIVE_REMOTE="gdrive:StableDiffusion-Images"
@@ -74,11 +75,9 @@ else
     echo "❌ Échec du téléchargement du VAE. Téléchargez-le manuellement."
 fi
 
-# Télécharger le modèle depuis CivitAI
-echo "📥 Téléchargement du modèle depuis CivitAI..."
-CIVITAI_MODEL_DIR="models/Stable-diffusion"
-mkdir -p "$CIVITAI_MODEL_DIR"
-cd "$CIVITAI_MODEL_DIR" || exit
+# Télécharger AnythingV5NijiMix
+echo "📥 Téléchargement du modèle AnythingV5NijiMix..."
+cd /workspace/stable-diffusion-webui/models/Stable-diffusion/
 wget --content-disposition "https://civitai.com/api/download/models/119438?type=Model&format=SafeTensor&size=full&fp=fp16"
 
 # Configuration des arguments de lancement
