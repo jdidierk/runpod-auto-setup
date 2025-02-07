@@ -12,7 +12,7 @@ HF_TOKEN="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"
 
 # Définir le remote Rclone pour Google Drive
 GDRIVE_REMOTE="gdrive:StableDiffusion-Outputs"
-LOCAL_OUTPUTS="/workspace/stable-diffusion-webui/outputs"
+LOCAL_OUTPUTS="/workspace/stable-diffusion-webui/output"
 
 # Vérifier et installer rclone si nécessaire
 echo "🔍 Vérification de l'installation de rclone..."
