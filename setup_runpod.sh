@@ -33,7 +33,13 @@ fi
 
 # Charger la configuration Rclone
 cp /workspace/rclone.conf ~/.config/rclone/rclone.conf
-echo "✅ Configuration Rclone chargée."
+    echo "✅ Configuration Rclone chargée."
+
+# Vérifier la configuration Rclone avant la synchronisation
+if ! rclone lsd gdrive: &> /dev/null; then
+    echo "⚠️ Problème d'authentification Rclone. Tentative de reconnexion..."
+    rclone config reconnect gdrive:
+fi
 
 # Télécharger le modèle ReV Animated depuis Hugging Face avec aria2c
 echo "📥 Téléchargement du modèle ReV Animated..."
@@ -74,7 +80,7 @@ else
     echo "❌ Échec du téléchargement du VAE. Téléchargez-le manuellement."
 fi
 
-# Télécharger le modèle AnythingV5NijiMix
+# Téléchargement du modèle AnythingV5NijiMix
 echo "📥 Téléchargement du modèle AnythingV5NijiMix..."
 cd /workspace/stable-diffusion-webui/models/Stable-diffusion/
 wget --content-disposition "https://civitai.com/api/download/models/119438?type=Model&format=SafeTensor&size=full&fp=fp16"
