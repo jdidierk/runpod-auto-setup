@@ -23,12 +23,17 @@ else
     echo "✅ rclone est déjà installé."
 fi
 
-# Vérifier et configurer Rclone si nécessaire
+# Vérifier et configurer Rclone manuellement si nécessaire
 mkdir -p ~/.config/rclone
 if [ ! -f /workspace/rclone.conf ]; then
-    echo "⚠️ Fichier rclone.conf introuvable. Création d'une configuration par défaut..."
-    rclone config create gdrive drive scope drive
-    cp $(rclone config file | awk '{print $NF}') /workspace/rclone.conf
+    echo "⚠️ Fichier rclone.conf introuvable. Configuration manuelle requise."
+    echo "📢 Exécutez la commande suivante sur votre PC local :"
+    echo "rclone authorize drive"
+    echo "Puis copiez-collez le token généré ici :"
+    read -p "Collez ici le token Rclone : " RCLONE_TOKEN
+    echo "[gdrive]" > /workspace/rclone.conf
+    echo "type = drive" >> /workspace/rclone.conf
+    echo "token = $RCLONE_TOKEN" >> /workspace/rclone.conf
 fi
 
 # Charger la configuration Rclone
