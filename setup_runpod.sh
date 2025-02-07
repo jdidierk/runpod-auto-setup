@@ -9,11 +9,10 @@ cd /workspace/stable-diffusion-webui || exit
 
 # Définir le jeton Hugging Face (REMPLACEZ "YOUR_HF_TOKEN" PAR VOTRE JETON)
 HF_TOKEN="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"
-#!/bin/bash
 
 # Définir le remote Rclone pour Google Drive
-GDRIVE_REMOTE="gdrive:StableDiffusion-Images"
-LOCAL_OUTPUTS="outputs"
+GDRIVE_REMOTE="gdrive:StableDiffusion-Outputs"
+LOCAL_OUTPUTS="/workspace/stable-diffusion-webui/outputs"
 
 # Vérifier et installer rclone si nécessaire
 echo "🔍 Vérification de l'installation de rclone..."
@@ -34,7 +33,7 @@ fi
 
 # Charger la configuration Rclone
 cp /workspace/rclone.conf ~/.config/rclone/rclone.conf
-    echo "✅ Configuration Rclone chargée."
+echo "✅ Configuration Rclone chargée."
 
 # Télécharger le modèle ReV Animated depuis Hugging Face avec aria2c
 echo "📥 Téléchargement du modèle ReV Animated..."
@@ -75,7 +74,7 @@ else
     echo "❌ Échec du téléchargement du VAE. Téléchargez-le manuellement."
 fi
 
-# Télécharger AnythingV5NijiMix
+# Télécharger le modèle AnythingV5NijiMix
 echo "📥 Téléchargement du modèle AnythingV5NijiMix..."
 cd /workspace/stable-diffusion-webui/models/Stable-diffusion/
 wget --content-disposition "https://civitai.com/api/download/models/119438?type=Model&format=SafeTensor&size=full&fp=fp16"
