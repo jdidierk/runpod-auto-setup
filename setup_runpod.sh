@@ -44,7 +44,7 @@ fi
 
 # Charger la configuration Rclone
 cp /workspace/rclone.conf ~/.config/rclone/rclone.conf
-echo "✅ Configuration Rclone chargée."
+    echo "✅ Configuration Rclone chargée."
 
 # Vérifier la configuration Rclone avant la synchronisation
 if ! rclone lsd gdrive: &> /dev/null; then
@@ -52,13 +52,9 @@ if ! rclone lsd gdrive: &> /dev/null; then
     rclone config reconnect gdrive:
 fi
 
-# Créer les dossiers nécessaires
-echo "📂 Vérification et création des dossiers..."
+# Créer le dossier de sortie s'il n'existe pas
+echo "📂 Vérification et création du dossier output..."
 mkdir -p "$LOCAL_OUTPUTS"
-mkdir -p /workspace/stable-diffusion-webui/models/Stable-diffusion
-mkdir -p /workspace/stable-diffusion-webui/models/VAE
-mkdir -p /workspace/stable-diffusion-webui/models/Lora
-chmod -R 777 /workspace/stable-diffusion-webui/models
 chmod -R 777 "$LOCAL_OUTPUTS"
 
 # Appliquer les réglages par défaut dans ui-config.json
@@ -83,7 +79,7 @@ EOL
 # Télécharger le modèle ReV Animated depuis Hugging Face avec aria2c
 echo "📥 Téléchargement du modèle ReV Animated..."
 MODEL_URL="https://huggingface.co/danbrown/RevAnimated-v1-2-2/resolve/main/rev-animated-v1-2-2.safetensors"
-MODEL_PATH="/workspace/stable-diffusion-webui/models/Stable-diffusion/rev-animated-v1-2-2.safetensors"
+MODEL_PATH="models/Stable-diffusion/rev-animated-v1-2-2.safetensors"
 
 if [ ! -f "$MODEL_PATH" ]; then
     aria2c -x 16 -s 16 --header="Authorization: Bearer $HF_TOKEN" -o "$MODEL_PATH" "$MODEL_URL"
@@ -95,56 +91,49 @@ else
     echo "❌ Échec du téléchargement du modèle ReV Animated. Téléchargez-le manuellement."
 fi
 
-# Télécharger un VAE adapté avec git lfs
-echo "📥 Téléchargement du VAE..."
-VAE_FILE="vae-ft-mse-840000-ema-pruned.safetensors"
-VAE_PATH="/workspace/stable-diffusion-webui/models/VAE/$VAE_FILE"
-if [ ! -f "$VAE_PATH" ]; then
-    wget -O "$VAE_PATH" "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/$VAE_FILE"
-fi
+# Télécharger des modèles LORA
+echo "📥 Téléchargement des modèles LORA..."
+LORA_DIR="models/Lora"
+mkdir -p "$LORA_DIR"
+cd "$LORA_DIR" || exit
 
-if [ -f "$VAE_PATH" ]; then
-    echo "✅ VAE téléchargé avec succès."
-else
-    echo "❌ Échec du téléchargement du VAE. Téléchargez-le manuellement."
-fi
+LORA_URLS=(
+    "https://civitai.com/api/download/models/816096?type=Model&format=SafeTensor"
+    "https://civitai.com/api/download/models/35553?type=Model&format=SafeTensor"
+    "https://civitai.com/api/download/models/355491?type=Model&format=SafeTensor"
+    "https://civitai.com/api/download/models/339112?type=Model&format=SafeTensor"
+    "https://civitai.com/api/download/models/161744?type=Model&format=SafeTensor"
+    "https://civitai.com/api/download/models/212325?type=Model&format=SafeTensor"
+    "https://civitai.com/api/download/models/597456?type=Model&format=SafeTensor"
+    "https://civitai.com/api/download/models/576343?type=Model&format=SafeTensor"
+    "https://civitai.com/api/download/models/15481?type=Model&format=SafeTensor&size=full&fp=fp16"
+)
 
-# Télécharger le modèle AnythingV5NijiMix
-echo "📥 Téléchargement du modèle AnythingV5NijiMix..."
+for url in "${LORA_URLS[@]}"; do
+    wget --content-disposition "$url"
+done
+
 cd /workspace/stable-diffusion-webui/models/Stable-diffusion/
 wget --content-disposition "https://civitai.com/api/download/models/119438?type=Model&format=SafeTensor&size=full&fp=fp16"
 
-# 📥 Télécharger le modèle LORA supplémentaire
-echo "📥 Téléchargement du modèle LORA..."
-LORA_PATH="/workspace/stable-diffusion-webui/models/Lora/816096.safetensors"
-if [ ! -f "$LORA_PATH" ]; then
-    wget -O "$LORA_PATH" "https://civitai.com/api/download/models/816096?type=Model&format=SafeTensor"
-fi
-
-# Configuration des arguments de lancement
-echo "⚙️ Configuration de lancement..."
-echo "export COMMANDLINE_ARGS='--xformers --no-half-vae --theme dark'" >> ~/.bashrc
-source ~/.bashrc
-
-# Lancer AUTOMATIC1111
+# Démarrer AUTOMATIC1111
 echo "🚀 Démarrage de l'interface WebUI..."
 nohup python launch.py > webui.log 2>&1 &
 
-# Automatiser la sauvegarde des images générées vers Google Drive toutes les 5 minutes (sans suppression)
-echo "🗂️ Configuration de la synchronisation avec Google Drive..."
+# Automatiser la sauvegarde des images vers Google Drive toutes les 5 minutes
+echo "🔄 Configuration de la synchronisation avec Google Drive..."
 while true; do
     echo "🔄 Synchronisation des images vers Google Drive..."
     rclone copy "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress --ignore-existing
     sleep 300  # Attente de 5 minutes
 done &
 
-# Définir un délai d'inactivité pour fermeture auto (ex: 1h = 3600s)
+# Définir un délai d'inactivité pour fermeture automatique
 INACTIVITY_TIMEOUT=3600
-
 echo "⏳ Suivi de l'activité..."
 sleep $INACTIVITY_TIMEOUT
 
-# Synchroniser une dernière fois avant d'éteindre le pod (sans supprimer)
+# Synchroniser une dernière fois avant d'éteindre le pod
 echo "🔄 Dernière synchronisation des images avant arrêt..."
 rclone copy "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress --ignore-existing
 
