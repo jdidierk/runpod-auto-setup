@@ -95,6 +95,11 @@ else
     echo "❌ Échec du téléchargement du modèle ReV Animated. Téléchargez-le manuellement."
 fi
 
+# Télécharger le modèle AnythingV5NijiMix
+echo "📥 Téléchargement du modèle AnythingV5NijiMix..."
+cd /workspace/stable-diffusion-webui/models/Stable-diffusion/
+wget --content-disposition "https://civitai.com/api/download/models/119438?type=Model&format=SafeTensor&size=full&fp=fp16"
+
 # Synchronisation du dossier Lora avec Google Drive
 echo "📥 Synchronisation des LoRA depuis Google Drive..."
 rclone sync "$GDRIVE_LORA" "$LOCAL_LORA" --progress --ignore-existing
