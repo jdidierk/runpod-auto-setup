@@ -19,6 +19,8 @@ HF_TOKEN="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"
 # Définir le remote Rclone pour Google Drive
 GDRIVE_REMOTE="gdrive:StableDiffusion-Outputs"
 LOCAL_OUTPUTS="/workspace/stable-diffusion-webui/output"
+GDRIVE_LORA="gdrive:StableDiffusion-LoRA"
+LOCAL_LORA="/workspace/stable-diffusion-webui/models/Lora"
 
 # Vérifier et installer rclone si nécessaire
 echo "🔍 Vérification de l'installation de rclone..."
@@ -52,10 +54,12 @@ if ! rclone lsd gdrive: &> /dev/null; then
     rclone config reconnect gdrive:
 fi
 
-# Créer le dossier de sortie s'il n'existe pas
-echo "📂 Vérification et création du dossier output..."
+# Créer les dossiers nécessaires
+echo "📂 Vérification et création des dossiers..."
 mkdir -p "$LOCAL_OUTPUTS"
+mkdir -p "$LOCAL_LORA"
 chmod -R 777 "$LOCAL_OUTPUTS"
+chmod -R 777 "$LOCAL_LORA"
 
 # Appliquer les réglages par défaut dans ui-config.json
 echo "🔧 Configuration des paramètres par défaut..."
@@ -91,30 +95,16 @@ else
     echo "❌ Échec du téléchargement du modèle ReV Animated. Téléchargez-le manuellement."
 fi
 
-# Télécharger des modèles LORA
-echo "📥 Téléchargement des modèles LORA..."
-LORA_DIR="models/Lora"
-mkdir -p "$LORA_DIR"
-cd "$LORA_DIR" || exit
+# Synchronisation du dossier Lora avec Google Drive
+echo "📥 Synchronisation des LoRA depuis Google Drive..."
+rclone sync "$GDRIVE_LORA" "$LOCAL_LORA" --progress --ignore-existing
 
-LORA_URLS=(
-    "https://civitai.com/api/download/models/816096?type=Model&format=SafeTensor"
-    "https://civitai.com/api/download/models/35553?type=Model&format=SafeTensor"
-    "https://civitai.com/api/download/models/355491?type=Model&format=SafeTensor"
-    "https://civitai.com/api/download/models/339112?type=Model&format=SafeTensor"
-    "https://civitai.com/api/download/models/161744?type=Model&format=SafeTensor"
-    "https://civitai.com/api/download/models/212325?type=Model&format=SafeTensor"
-    "https://civitai.com/api/download/models/597456?type=Model&format=SafeTensor"
-    "https://civitai.com/api/download/models/576343?type=Model&format=SafeTensor"
-    "https://civitai.com/api/download/models/15481?type=Model&format=SafeTensor&size=full&fp=fp16"
-)
-
-for url in "${LORA_URLS[@]}"; do
-    wget --content-disposition "$url"
-done
-
-cd /workspace/stable-diffusion-webui/models/Stable-diffusion/
-wget --content-disposition "https://civitai.com/api/download/models/119438?type=Model&format=SafeTensor&size=full&fp=fp16"
+# Automatiser la synchronisation des LoRA toutes les 10 minutes
+while true; do
+    echo "🔄 Mise à jour des LoRA depuis Google Drive..."
+    rclone sync "$GDRIVE_LORA" "$LOCAL_LORA" --progress --ignore-existing
+    sleep 600  # Attente de 10 minutes
+done &
 
 # Démarrer AUTOMATIC1111
 echo "🚀 Démarrage de l'interface WebUI..."
@@ -136,6 +126,10 @@ sleep $INACTIVITY_TIMEOUT
 # Synchroniser une dernière fois avant d'éteindre le pod
 echo "🔄 Dernière synchronisation des images avant arrêt..."
 rclone copy "$LOCAL_OUTPUTS" "$GDRIVE_REMOTE" --progress --ignore-existing
+
+# Sauvegarde des LoRA avant arrêt
+echo "📤 Sauvegarde des nouveaux LoRA vers Google Drive..."
+rclone copy "$LOCAL_LORA" "$GDRIVE_LORA" --progress --ignore-existing
 
 echo "🔻 Aucune activité détectée, arrêt du pod..."
 poweroff
